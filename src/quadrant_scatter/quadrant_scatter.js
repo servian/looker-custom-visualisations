@@ -14,6 +14,7 @@ looker.plugins.visualizations.add({
 
             .quadrant-label {
                 fill: #a09e9f;
+                font-family: 'Roboto', sans-serif;
                 font-size: 24px;
                 font-weight: bold;
             }
