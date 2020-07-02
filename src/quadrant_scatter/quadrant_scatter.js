@@ -1,44 +1,34 @@
 import * as d3 from "d3";
 
-// function updateData(data) {
-// }
-
 looker.plugins.visualizations.add({
     create: function (element, config) {
         element.innerHTML = `
         <style>
-            * {
-            font-family: 'Roboto', sans-serif;
-            }
-
             .axis path,
             .axis line {
-            fill: none;
-            stroke: #666666;
-            stroke-width: 2px;
-            shape-rendering: crispEdges;
+                fill: none;
+                stroke: #666666;
+                stroke-width: 2px;
+                shape-rendering: crispEdges;
             }
 
             .quadrant-label {
-            fill: #f9cb9c;
-            font-size: 24px;
-            font-weight: bold;
+                fill: #a09e9f;
+                font-size: 24px;
+                font-weight: bold;
             }
 
             .axis-label {
-            fill: #666666;
-            font-family: 'Roboto', sans-serif;
-            font-size: 2
+                fill: #666666;
+                font-family: 'Roboto', sans-serif;
+                font-size: 2
             }
         </style>`;
 
         this.quadSvg = d3.select("#vis")
             .append("svg")
-        // .attr("width", width)
-        // .attr("height", height);
-        // .attr("viewbox", [0, 0, width, height]);
-        // .attr("preserveAspectRatio", "none");
     },
+
     // Render in response to the data or settings changing
     updateAsync: function (data, element, config, queryResponse, details, done) {
         this.clearErrors();
