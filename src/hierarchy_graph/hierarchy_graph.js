@@ -61,7 +61,7 @@ function parseData(data, config) {
                 counts[d[config.child].value] = 1;
                 return d[config.child].value;
             } else {
-                return d[config.child].value + " " + ++counts[d[config.child].value];
+                return d[config.child].value + "~" + ++counts[d[config.child].value];
             }
         })
         .parentId(d => d[config.parent].value)
@@ -71,51 +71,69 @@ function parseData(data, config) {
 }
 
 const svg = d3.create("svg")
-    .attr("viewBox", [0, 0, 1500, 1500])
+    .attr("width", "100%")
+    .attr("height", "100%")
     .style("font", "8px sans-serif")
     .style("overflow", "visible");
 
-const gLink = svg.append("g")
+const gCanvas = svg.append("g");
+
+const gLink = gCanvas.append("g")
     .attr("fill", "none")
     .attr("stroke", "#555")
     .attr("stroke-opacity", 0.4)
     .attr("stroke-width", 1.5)
 
-const gNode = svg.append("g")
+const gNode = gCanvas.append("g")
     .attr("cursor", "pointer")
     .attr("pointer-events", "all")
     .attr("stroke-linejoin", "round")
     .attr("stroke-width", 3);
 
+function zoomed() {
+    gCanvas.attr("transform", d3.event.transform);
+}
+const treeLink = d3.linkHorizontal().x(d => d.y).y(d => d.x);
 var root;
 
-function drawGraph(source, width) {
+function drawGraph(source, width, height) {
     const links = root.links();
-    var treeLink = d3.linkHorizontal().x(d => d.y).y(d => d.x);
 
-    // var tree = d3.tree().size([width, height]);
-    var tree = d3.tree().nodeSize([12, 150]);
+    var tree = d3.tree().nodeSize([15, 150]);
 
+    // var tree = d3.tree().size([width/2, height]);
     tree(root);
 
     let left = root;
     let right = root;
+    let top = root;
+    let bottom = root;
 
     root.each(node => {
         if (node.x < left.x) left = node;
         if (node.x > right.x) right = node;
+        if (node.y < bottom.y) bottom = node;
+        if (node.y > top.y) top = node;
     });
 
-    const height = right.x - left.x + 30;
+    //  svg.attr("viewBox", [bottom.y - 100, left.x - 30, top.y - bottom.y + 300, right.x - left.x + 30])
+    // svg.attr("viewBox", [bottom.y - 100, left.x - 30, width, height])
+
+
+    // const height = right.x - left.x + 30;
 
     const transition = svg.transition()
         .duration(250)
-        .attr("viewBox", [-100, left.x - 20, width, height])
+        // .attr("viewBox", [bottom.y - 100, left.x - 30, top.y - bottom.y + 300, right.x - left.x + 30])
+        // .attr("viewBox", [bottom.y - 100, left.x - 30, width, height])
 
-    // Update the nodes…
+    svg.call(d3.zoom()
+        // .extent([[0, 0], [100, 200]])
+        .scaleExtent([-4, 4])
+        .on("zoom", zoomed));
+
     const node = gNode.selectAll("g")
         .data(root.descendants(), d => d.id);
-    // .attr("transform", d => `translate(${d.x},${d.y})`);
 
     // Enter any new nodes at the parent's previous position.
     const nodeEnter = node.enter().append("g")
@@ -123,28 +141,27 @@ function drawGraph(source, width) {
         .attr("fill-opacity", 0)
         .attr("stroke-opacity", 0)
         .on("click", d => {
-            d.children = d.children ? null : d._children;
-            drawGraph(d, width);
+            if(d.children){
+                d.children = null;
+            }else{
+                d.children = d._children;
+            }
+            drawGraph(d, width, height);
         });
 
     nodeEnter.append("circle")
-        .attr("r", 2.5)
-        .attr("fill", d => d._children ? "#555" : "#999")
+        .attr("r", 4)
+        .attr("fill", d => d._children ? "#0059b3" : "#999")
         .attr("stroke-width", 10);
 
-    // gNode.append("circle")
-    //     .attr("fill", d => d.children ? "#555" : "#999")
-    //     .attr("r", 2.5);
     nodeEnter.append("text")
         .attr("dy", "0.31em")
         .attr("x", d => d.depth == 0 ? -6 : 6)
-        // .attr("x", d => d._children ? -6 : 6)
+        // .attx", d => d._children ? -6 : 6)
         .attr("text-anchor", d => d.depth == 0 ? "end" : "start")
         // .attr("text-anchor", d => d._children ? "end" : "start")
-        // .text(d => d.data.name)
-        .text(d => d.id)
+        .text(d => d.id.indexOf("~") == -1 ? d.id : d.id.slice(0, d.id.indexOf("~")))
         .clone(true).lower()
-        // .attr("stroke-linejoin", "round")
         .attr("stroke-width", 3)
         .attr("stroke", "white");
 
@@ -228,9 +245,9 @@ looker.plugins.visualizations.add({
         });
 
         root = parsedHierarchy;
-        const node = drawGraph(parsedHierarchy, width);
+        const node = drawGraph(parsedHierarchy, width, height);
         element.appendChild(node);
-
+        svg.attr("viewBox", [-(width/3),-(height/2), width, height])
         done();
     }
 });
