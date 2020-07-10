@@ -75,7 +75,7 @@ looker.plugins.visualizations.add({
             y: y_max / 4 * 3
         }]
 
-        const xAxisLabel = 'ProductionML Readiness';
+        const xAxisLabel = 'ProductionML Capability';
         const yAxisLabel = 'Ability to Deliver Business Value'
 
         const innerBorderY = [
