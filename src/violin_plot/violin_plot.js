@@ -15,60 +15,70 @@ looker.plugins.visualizations.add({
 
   updateAsync: function (data, element, config, queryResponse, details, done) {
 
-    // Clear any errors from previous updates.
+  console.log("data:")
+  console.log(data)
+  //  
+  //  console.log("element:")
+  //  console.log(element)
+  //  
+  //  console.log("config:")
+  //  console.log(config)
+  //  
+  //  console.log("queryResponse:")
+  //  console.log(queryResponse)
+  //  
+  //  console.log("details:")
+  //  console.log(details)
+
+
     this.clearErrors();
 
-    // Throw some errors and exit if the shape of the data isn't what this chart needs.
     if (queryResponse.fields.dimensions.length == 0) {
       this.addError({title: "No Dimensions", message: "This chart requires dimensions."});
       return;
     }
 
-    // Sizing
+    // Variables from dataset
     var width = element.clientWidth;
-    console.log("width:")
-    console.log(width)
-
     var height = element.clientHeight - 100;
-    console.log("height:")
-    console.log(height)
 
     var svg = this.svgViolin
       .html('')
       .attr('width', '100%')
       .attr('height', '100%')
   
-    // Variables from dataset
-    var featureName = "customer_segments_labels.channel_grouping_count" // ---- >>>>>> dynamically swap out <<<<<< ---- //
-    var centroidIDFeatureName = "customer_segments_labels.centroid_id" 
+    var featureName = "customer_segments_labels_simple.feature"
+    var centroidIDFeatureName = "customer_segments_labels_simple.centroid_id" 
     
-    var new_data = data.map(function(d) {
+    var new_data = data.map(function(d) { // convert Looker 'data' to csv-like format
+
       var container = {};
-      container[featureName] = d[featureName].value.toString();
-      container[centroidIDFeatureName] = d[centroidIDFeatureName].value.toString();
+      var featureNameTemp = d[featureName];
+      var centroidIDFeatureNameTemp = d[centroidIDFeatureName];
+
+      container[featureName] = featureNameTemp.value.toString();
+      container[centroidIDFeatureName] = centroidIDFeatureNameTemp.value.toString();
+
       return container
     })
-      
+
+    console.log("new_data:")
+    console.log(new_data)
+
+
     var featureData = new_data.map(function(d) {return parseInt(d[featureName])})
     var featureDataMax = d3.max(featureData)
-  
-    console.log("featureDataMax")
-    console.log(featureDataMax)
 
-    //var centroidIDFeatureName = "customer_segments_labels.centroid_id" 
     var centroids = new_data.map(function(d) {return d[centroidIDFeatureName];})
     var centroidsSet = new Set(centroids)
     var centroidsDistinct = Array.from(centroidsSet).sort()
-  
-    console.log("centroidsDistinct")
-    console.log(centroidsDistinct)
   
     // Build and Show the Y scale
     var y = d3.scaleLinear()
       .domain([0, featureDataMax + 1 ]) //featureDataMax  // Note that here the Y scale is set manually //--->>>> swap 15 out for max(of selected column)
       .range([height, 0])
     
-    this.svgViolin.append("g").attr("transform", "translate(" + 25 + "," + 10 + ")").call(d3.axisLeft(y))
+    this.svgViolin.append("g").attr("transform", "translate(" + 40 + "," + 10 + ")").call(d3.axisLeft(y))
   
     // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
     var x = d3.scaleBand()
@@ -76,7 +86,7 @@ looker.plugins.visualizations.add({
       .domain(centroidsDistinct)
       .padding(0.25)    // This is important: it is the space between 2 groups. 0 means no padding. 1 is the maximum.
     
-    this.svgViolin.append("g").attr("transform", "translate(25," + (height + 11) + ")").call(d3.axisBottom(x))
+    this.svgViolin.append("g").attr("transform", "translate(40," + (height + 11) + ")").call(d3.axisBottom(x))
   
     // Features of the histogram
     var histogram = d3.histogram()
@@ -94,9 +104,6 @@ looker.plugins.visualizations.add({
       })
       .entries(new_data)
 
-    console.log("sumstat:")
-    console.log(sumstat)
-
     // What is the biggest number of value in a bin? We need it cause this value will have a width of 100% of the bandwidth.
     var maxNum = 0
     for ( i in sumstat ){
@@ -113,7 +120,7 @@ looker.plugins.visualizations.add({
 
     // Add the shape to this svg!
     this.svgViolin.selectAll("#vis").data(sumstat).enter()        // So now we are working group per group
-      .append("g").attr("transform", function(d){ return("translate(" + (x(d.key) + 25) + " , 11)") } ) // Translation on the right to be at the group position
+      .append("g").attr("transform", function(d){ return("translate(" + (x(d.key) + 40) + " , 11)") } ) // Translation on the right to be at the group position
       .append("path").datum(function(d){ return(d.value)})     // So now we are working bin per bin
       .style("stroke", "none")
       .style("fill","#69b3a2")
