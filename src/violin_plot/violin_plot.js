@@ -15,20 +15,24 @@ looker.plugins.visualizations.add({
 
   updateAsync: function (data, element, config, queryResponse, details, done) {
 
-  console.log("data:")
-  console.log(data)
-  //  
-  //  console.log("element:")
-  //  console.log(element)
-  //  
-  //  console.log("config:")
-  //  console.log(config)
-  //  
-  //  console.log("queryResponse:")
-  //  console.log(queryResponse)
-  //  
-  //  console.log("details:")
-  //  console.log(details)
+    // console.log("data:")
+    // console.log(data)
+    // 
+    // console.log("data_shape:")
+    // var data_shape = [data.length, data[0].length];
+    // console.log(data_shape)
+    // 
+    // console.log("element:")
+    // console.log(element)
+    // 
+    // console.log("config:")
+    // console.log(config)
+    // 
+    // console.log("queryResponse:")
+    // console.log(queryResponse)
+    // 
+    // console.log("details:")
+    // console.log(details)
 
 
     this.clearErrors();
