@@ -33,7 +33,6 @@ looker.plugins.visualizations.add({
     // Render in response to the data or settings changing
     updateAsync: function (data, element, config, queryResponse, details, done) {
         this.clearErrors();
-        console.log("updating")
 
         const width = element.clientWidth;
         const height = element.clientHeight;
@@ -75,7 +74,7 @@ looker.plugins.visualizations.add({
             y: y_max / 4 * 3
         }]
 
-        const xAxisLabel = 'ProductionML Readiness';
+        const xAxisLabel = 'ProductionML Capability';
         const yAxisLabel = 'Ability to Deliver Business Value'
 
         const innerBorderY = [
@@ -133,7 +132,7 @@ looker.plugins.visualizations.add({
             .attr("class", "axis-label")
             .attr("text-anchor", "middle")
             .attr("x", width / 2)
-            .attr("y", height)
+            .attr("y", height - (margin.bottom/5))
             .text(xAxisLabel);
 
         //y-axis label
@@ -180,10 +179,10 @@ looker.plugins.visualizations.add({
             .data(data)
             .join('circle')
             .attr('cx', function (d) {
-                return x(d["ml_maturity_assessment.ability_to_deliver_business_value"].value);
+                return x(d["ml_maturity_assessment.production_ml_readiness"].value);
             })
             .attr('cy', function (d) {
-                return y(d["ml_maturity_assessment.production_ml_readiness"].value);
+                return y(d["ml_maturity_assessment.ability_to_deliver_business_value"].value);
             })
             .attr('r', 10)
             .attr('fill', '#5091c788')

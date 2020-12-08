@@ -6,7 +6,9 @@ module.exports = {
   entry: {
     location_scatter: './src/location_scatter/location_scatter.js',
     hex_map: './src/hex_map/hex_map.js',
-    quadrant_scatter: './src/quadrant_scatter/quadrant_scatter.js'
+    quadrant_scatter: './src/quadrant_scatter/quadrant_scatter.js',
+    hierarchy_graph: './src/hierarchy_graph/hierarchy_graph.js',
+    ridgeline_plot: './src/ridgeline_plot/ridgeline_plot.js'
   },
   devServer: {
     https: true,
