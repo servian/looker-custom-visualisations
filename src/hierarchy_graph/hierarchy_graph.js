@@ -55,7 +55,7 @@ function getOptionValues(queryResponse, existingOptions) {
 
 function parseData(data, config) {
     var counts = {};
-    const root = d3.stratify()
+    return d3.stratify()
         .id(d => {
             if (!counts[d[config.child].value]) {
                 counts[d[config.child].value] = 1;
@@ -66,8 +66,6 @@ function parseData(data, config) {
         })
         .parentId(d => d[config.parent].value)
         (data);
-
-    return root;
 }
 
 const svg = d3.create("svg")
