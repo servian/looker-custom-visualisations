@@ -1,5 +1,9 @@
 node_modules/
-test/
-*.csv
 .DS_Store
 .idea/
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*

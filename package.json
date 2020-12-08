@@ -1,9 +1,8 @@
 {
-  "name": "looker-visualization-api-examples",
-  "version": "2.0.20",
+  "name": "servian-looker-custom-visualisations",
+  "version": "0.1",
   "license": "MIT",
-  "description": "A selection of sample visualizations for use as Looker visualizations",
-  "main": "demo/index.html",
+  "description": "A bunch of visualisations created by Servian",
   "scripts": {
     "build": "webpack --config webpack.config.js",
     "watch": "webpack --config webpack.config.js --watch --progress",
