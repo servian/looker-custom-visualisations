@@ -137,8 +137,8 @@ const visObject = {
 
         const margin = ({top: 20, right: 20, bottom: 20, left: 20})
 
-        const x_max = d3.max(data, d => d[config.x_axis_field].value) + 20
-        const y_max = d3.max(data, d => d[config.y_axis_field].value) + 20
+        const x_max = d3.max(data, d => d[config.x_axis_field].value)
+        const y_max = d3.max(data, d => d[config.y_axis_field].value)
 
         const x = d3.scaleLinear()
             .domain([0, x_max])
@@ -156,7 +156,7 @@ const visObject = {
         }, {
             text: config.top_right_quad_label,
             x: x_max / 4 * 3,
-            y: x_max / 4 * 3
+            y: y_max / 4 * 3
         }, {
             text: config.bottom_right_quad_label,
             x: x_max / 4 * 3,
