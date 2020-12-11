@@ -1,5 +1,14 @@
 import * as d3 from "d3";
 
+function getExtent (supplied_min, supplied_max, data, accessor) {
+    let data_extent = d3.extent(data, accessor)
+
+    let new_min = supplied_min === undefined ? data_extent[0] : supplied_min
+    let new_max = supplied_max === undefined ? data_extent[1] : supplied_max
+
+    return [new_min, new_max]
+}
+
 function modifyOptions(vis, queryResponse, existingOptions) {
     const measureFields = queryResponse.fields.measure_like.map( element => {
         return {[element.label]: element.name}
@@ -46,6 +55,21 @@ const visObject = {
             section: "X Axis",
             values: []
         },
+        x_axis_min: {
+            order: 3,
+            type: "number",
+            display_size: "half",
+            label: "Minimum Value",
+            section: "X Axis",
+            default: 0
+        },
+        x_axis_max: {
+            order: 4,
+            type: "number",
+            display_size: "half",
+            label: "Maximum Value",
+            section: "X Axis"
+        },
         y_axis_label: {
             order: 1,
             type: "string",
@@ -60,6 +84,21 @@ const visObject = {
             label: "Value Field",
             section: "Y Axis",
             values: []
+        },
+        y_axis_min: {
+            order: 3,
+            type: "number",
+            display_size: "half",
+            label: "Minimum Value",
+            section: "Y Axis",
+            default: 0
+        },
+        y_axis_max: {
+            order: 4,
+            type: "number",
+            display_size: "half",
+            label: "Maximum Value",
+            section: "Y Axis"
         },
         top_left_quad_label: {
             order: 1,
@@ -136,62 +175,63 @@ const visObject = {
                 .attr('height', '100%')
 
         const margin = ({top: 20, right: 20, bottom: 20, left: 20})
-
-        const x_max = d3.max(data, d => d[config.x_axis_field].value)
-        const y_max = d3.max(data, d => d[config.y_axis_field].value)
+        const x_extent = getExtent(config.x_axis_min, config.x_axis_max, data, d => d[config.x_axis_field].value)
+        const y_extent = getExtent(config.y_axis_min, config.y_axis_max, data, d => d[config.y_axis_field].value)
+        const x_axis_length = width - margin.right
+        const y_axis_length = height - margin.bottom
 
         const x = d3.scaleLinear()
-            .domain([0, x_max])
-            .range([margin.left, width - margin.right]);
+            .domain(x_extent)
+            .range([margin.left, x_axis_length]);
 
         const y = d3.scaleLinear()
-            .domain([0, y_max])
-            .range([height - margin.bottom, margin.top]);
+            .domain(y_extent)
+            .range([y_axis_length, margin.top]);
 
         //quadrant labels
         const labels = [{
             text: config.bottom_left_quad_label,
-            x: x_max / 4,
-            y: y_max / 4
+            x: x_axis_length / 4,
+            y: y_axis_length / 4 * 3
         }, {
             text: config.top_right_quad_label,
-            x: x_max / 4 * 3,
-            y: y_max / 4 * 3
+            x: x_axis_length / 4 * 3,
+            y: y_axis_length / 4
         }, {
             text: config.bottom_right_quad_label,
-            x: x_max / 4 * 3,
-            y: y_max / 4
+            x: x_axis_length / 4 * 3,
+            y: y_axis_length / 4 * 3
         }, {
             text: config.top_left_quad_label,
-            x: x_max / 4,
-            y: y_max / 4 * 3
+            x: x_axis_length / 4,
+            y: y_axis_length / 4
         }]
 
         const xAxisLabel = config.x_axis_label
         const yAxisLabel = config.y_axis_label
 
         const innerBorderY = [
-            {x: x_max / 2, y: 0},
-            {x: x_max / 2, y: y_max}
+            {x: x_axis_length / 2, y: margin.top},
+            {x: x_axis_length / 2, y: y_axis_length}
         ]
 
         const innerBorderX = [
-            {x: 0, y: y_max / 2},
-            {x: x_max, y: y_max / 2}
+            {x: margin.left, y: y_axis_length / 2},
+            {x: x_axis_length, y: y_axis_length / 2}
         ]
 
         const lineFunc = d3.line()
             .x(function (d) {
-                return x(d.x);
+                return d.x;
             })
             .y(function (d) {
-                return y(d.y);
+                return d.y;
             })
             .curve(d3.curveLinear);
 
 
         const xAxis = g => g
-            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .attr("transform", `translate(0,${y_axis_length})`)
             .call(d3.axisBottom(x).ticks([]).tickSize(0))
             .call(g => g.select(".domain").attr('stroke', '#666666'))
 
@@ -214,10 +254,10 @@ const visObject = {
             .append('text')
                 .attr('class', 'quadrant-label')
                 .attr('x', function (d) {
-                    return x(d.x);
+                    return d.x;
                 })
                 .attr('y', function (d) {
-                    return y(d.y);
+                    return d.y;
                 })
                 .attr('text-anchor', 'middle')
                 .text(function (d) {
