@@ -13,21 +13,6 @@ function modifyOptions(vis, queryResponse, existingOptions) {
     const measureFields = queryResponse.fields.measure_like.map( element => {
         return {[element.label]: element.name}
     })
-    // queryResponse.fields.dimension_like.forEach(element => {
-    //     switch (element.type) {
-    //         case 'date_time':
-    //             timeDimensionFields.push({[element.label]: element.name});
-    //             break;
-    //         case 'string':
-    //             latLongFields.push({[element.label]: element.name});
-    //             break;
-    //         case 'number':
-    //             latLongFields.push({[element.label]: element.name});
-    //             break;
-    //         default:
-    //             break;
-    //     }
-    // });
 
     const newOptions = {
         ... existingOptions,
@@ -210,26 +195,6 @@ const visObject = {
         const xAxisLabel = config.x_axis_label
         const yAxisLabel = config.y_axis_label
 
-        const innerBorderY = [
-            {x: x_axis_length / 2, y: margin.top},
-            {x: x_axis_length / 2, y: y_axis_length}
-        ]
-
-        const innerBorderX = [
-            {x: margin.left, y: y_axis_length / 2},
-            {x: x_axis_length, y: y_axis_length / 2}
-        ]
-
-        const lineFunc = d3.line()
-            .x(function (d) {
-                return d.x;
-            })
-            .y(function (d) {
-                return d.y;
-            })
-            .curve(d3.curveLinear);
-
-
         const xAxis = g => g
             .attr("transform", `translate(0,${y_axis_length})`)
             .call(d3.axisBottom(x).ticks([]).tickSize(0))
@@ -253,16 +218,10 @@ const visObject = {
             .enter()
             .append('text')
                 .attr('class', 'quadrant-label')
-                .attr('x', function (d) {
-                    return d.x;
-                })
-                .attr('y', function (d) {
-                    return d.y;
-                })
+                .attr('x', d => d.x)
+                .attr('y', d => d.y)
                 .attr('text-anchor', 'middle')
-                .text(function (d) {
-                    return d.text;
-                });
+                .text(d => d.text);
 
         //x-axis label
         quadSvg.append("text")
@@ -299,14 +258,21 @@ const visObject = {
             .attr('marker-end', 'url(#marker_arrow)');
 
         quadSvg.append('path')
-            .attr('d', lineFunc(innerBorderY))
+            .attr('d', d3.line()([
+                [x_axis_length / 2, margin.top],
+                [x_axis_length / 2, y_axis_length]
+                ])
+            )
             .attr('stroke', '#666666')
             .attr('stroke-dasharray', '2')
             .attr('stroke-width', 1)
             .attr('fill', 'none')
 
         quadSvg.append("path")
-            .attr('d', lineFunc(innerBorderX))
+            .attr('d', d3.line()([
+                [margin.left, y_axis_length / 2],
+                [x_axis_length, y_axis_length / 2]
+            ]))
             .attr('stroke', '#666666')
             .attr('stroke-dasharray', '2')
             .attr('stroke-width', 1)
@@ -315,12 +281,8 @@ const visObject = {
         quadSvg.selectAll('circle')
             .data(data)
             .join('circle')
-                .attr('cx', function (d) {
-                    return x(d[config.x_axis_field].value);
-                })
-                .attr('cy', function (d) {
-                    return y(d[config.y_axis_field].value);
-                })
+                .attr('cx', d => x(d[config.x_axis_field].value))
+                .attr('cy', d => y(d[config.y_axis_field].value))
                 .attr('r', 10)
                 .attr('fill', '#5091c788')
                 .attr('stroke', '#5091c7')
