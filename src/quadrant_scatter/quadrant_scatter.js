@@ -1,13 +1,5 @@
 import * as d3 from "d3";
 
-function getExtent (supplied_min, supplied_max, data, accessor) {
-    let data_extent = d3.extent(data, accessor)
-
-    let new_min = supplied_min === undefined ? data_extent[0] : supplied_min
-    let new_max = supplied_max === undefined ? data_extent[1] : supplied_max
-
-    return [new_min, new_max]
-}
 
 function modifyOptions(vis, queryResponse, existingOptions) {
     const measureFields = queryResponse.fields.measure_like.map( element => {
@@ -45,14 +37,20 @@ const visObject = {
             type: "number",
             display_size: "half",
             label: "Minimum Value",
-            section: "X Axis",
-            default: 0
+            section: "X Axis"
         },
         x_axis_max: {
             order: 4,
             type: "number",
             display_size: "half",
             label: "Maximum Value",
+            section: "X Axis"
+        },
+        x_axis_num_ticks: {
+            order: 5,
+            type: "number",
+            display_size: "half",
+            label: "Number of Axis Ticks",
             section: "X Axis"
         },
         y_axis_label: {
@@ -76,13 +74,19 @@ const visObject = {
             display_size: "half",
             label: "Minimum Value",
             section: "Y Axis",
-            default: 0
         },
         y_axis_max: {
             order: 4,
             type: "number",
             display_size: "half",
             label: "Maximum Value",
+            section: "Y Axis"
+        },
+        y_axis_num_ticks: {
+            order: 5,
+            type: "number",
+            display_size: "half",
+            label: "Number of Axis Ticks",
             section: "Y Axis"
         },
         top_left_quad_label: {
@@ -126,7 +130,7 @@ const visObject = {
             .axis line {
                 fill: none;
                 stroke: #666666;
-                stroke-width: 2px;
+                stroke-width: 1px;
                 shape-rendering: crispEdges;
             }
 
@@ -159,7 +163,7 @@ const visObject = {
                 .attr('width', '100%')
                 .attr('height', '100%')
 
-        const margin = ({top: 20, right: 20, bottom: 20, left: 20})
+        const margin = ({top: 20, right: 20, bottom: 50, left: 50})
         const x_extent = getExtent(config.x_axis_min, config.x_axis_max, data, d => d[config.x_axis_field].value)
         const y_extent = getExtent(config.y_axis_min, config.y_axis_max, data, d => d[config.y_axis_field].value)
         const x_axis_length = width - margin.right
@@ -197,20 +201,30 @@ const visObject = {
 
         const xAxis = g => g
             .attr("transform", `translate(0,${y_axis_length})`)
-            .call(d3.axisBottom(x).ticks([]).tickSize(0))
-            .call(g => g.select(".domain").attr('stroke', '#666666'))
+            .call(
+                d3.axisBottom(x)
+                    .ticks(config.x_axis_num_ticks)
+                    .tickSizeOuter(6)
+            )
+            .call(g => g.select(".domain"))
 
         const yAxis = g => g
             .attr("transform", `translate(${margin.left},0)`)
-            .call(d3.axisLeft(y).ticks([]).tickSize(0))
-            .call(g => g.select(".domain").attr('stroke', '#666666'))
+            .call(
+                d3.axisLeft(y)
+                    .ticks(config.y_axis_num_ticks)
+                    .tickSizeOuter(6)
+            )
+            .call(g => g.select(".domain"))
 
         quadSvg.append("g")
             .attr('id', 'axisX')
+            .attr('class', 'axis')
             .call(xAxis)
 
         quadSvg.append("g")
             .attr('id', 'axisY')
+            .attr('class', 'axis')
             .call(yAxis)
 
         quadSvg.selectAll(".quadrant-label")
@@ -240,22 +254,22 @@ const visObject = {
             .text(yAxisLabel);
 
         quadSvg.append("defs")
-            .append('marker')
-                .attr('id', 'marker_arrow')
-                .attr('orient', 'auto')
-                .attr('markerWidth', 10)
-                .attr('markerHeight', 10)
-                .attr('viewBox', '0 -5 10 10')
+            // .append('marker')
+            //     .attr('id', 'marker_arrow')
+            //     .attr('orient', 'auto')
+            //     .attr('markerWidth', 10)
+            //     .attr('markerHeight', 10)
+            //     .attr('viewBox', '0 -5 10 10')
             .append('path')
                 .attr('d', 'M 0,-3 L 0 3 L 7 0 Z')
                 .attr('stroke', '#666666')
                 .attr('stroke-width', 1)
                 .attr('fill', '#666666');
 
-        quadSvg.select('#axisX path.domain')
-            .attr('marker-end', 'url(#marker_arrow)');
-        quadSvg.select('#axisY path.domain')
-            .attr('marker-end', 'url(#marker_arrow)');
+        // quadSvg.select('#axisX path.domain')
+        //     .attr('marker-end', 'url(#marker_arrow)');
+        // quadSvg.select('#axisY path.domain')
+        //     .attr('marker-end', 'url(#marker_arrow)');
 
         quadSvg.append('path')
             .attr('d', d3.line()([
