@@ -35,7 +35,7 @@ function ready(error, topology, cleanedData, vis) {
     let axisGroup = sliderGroup.append('g').attr("id", "axis-group");
     let brushGroup = sliderGroup.append('g').attr("id", "brush_group").attr("transform", 'translate(0,0)');
 
-    let geojson = topojson.feature(topology, topology.objects.chicago);
+    let geojson = topojson.feature(topology, topology.objects.football_field);
     projection.fitExtent([[40, 10], [element.clientWidth, element.clientHeight]], geojson);
 
     let path = d3.geoPath()
@@ -59,19 +59,26 @@ function ready(error, topology, cleanedData, vis) {
         .attr("height", sliderHeight);
 
     let brushResizePath = function (d) {
-        let e = +(d.type == "e"),
+        let e = +(d.type === "e"),
             x = e ? 1 : -1,
             y = (sliderHeight - sliderMargin.top - sliderMargin.bottom) / 2;
-        return "M" + (.5 * x) + "," + y + "A6,6 0 0 " + e + " " + (6.5 * x) + "," + (y + 6) + "V" + (2 * y - 6) +
-            "A6,6 0 0 " + e + " " + (.5 * x) + "," + (2 * y) + "Z" + "M" + (2.5 * x) + "," + (y + 8) + "V" + (2 * y - 8) +
-            "M" + (4.5 * x) + "," + (y + 8) + "V" + (2 * y - 8);
+        return "M" + (.5 * x) + "," + y
+            + "A6,6 0 0 " + e + " " + (6.5 * x) + "," + (y + 6)
+            + "V" + (2 * y - 6)
+            + "A6,6 0 0 " + e + " " + (.5 * x) + "," + (2 * y)
+            + "Z"
+            + "M" + (2.5 * x) + "," + (y + 8)
+            + "V" + (2 * y - 8)
+            + "M" + (4.5 * x) + "," + (y + 8)
+            + "V" + (2 * y - 8);
     };
 
     sliderGroup.attr("transform", 'translate(' + sliderMargin.left + ',' + sliderMargin.top + ')');
 
-    const brush = d3.brushX()
+    var brush = d3.brushX()
         .extent([[0, 0], [sliderWidth - sliderMargin.left - sliderMargin.right, sliderHeight - sliderMargin.top - sliderMargin.bottom]])
-        .on("brush end", brushMoved);
+        .on("brush", brushMoved)
+        .on("end", brushMoved);
 
     axisGroup.call(d3.axisBottom(timeScale).ticks(sliderWidth / 70));
     // .attr("transform", 'translate('+[0,10]+')')
@@ -92,20 +99,22 @@ function ready(error, topology, cleanedData, vis) {
         .attr('fill', "#ffb84d");
 
     function brushMoved() {
-        const s = d3.event.selection
+        console.log("brushing")
+        let selection = d3.event.selection
+
         const hexbin = d3hex.hexbin()
             .extent([[10, 10], [width, height]])
             .radius(6)
             .x(d => d.pickup_x)
             .y(d => d.pickup_y);
 
-        if (s) {
+        if (selection) {
             // Update the location of the slider handles
             handle.attr("display", null)
                 .attr("transform", function (d, i) {
-                    return "translate(" + [s[i], -2] + ")";
+                    return "translate(" + [selection[i], -2] + ")";
                 });
-            const range = s.map(timeScale.invert);
+            const range = selection.map(timeScale.invert);
             updateHexbin(hexbin, hexGroup, cleanedData.filter(function (d) {
                 return range[0] <= d.start_timestamp && range[1] >= d.start_timestamp;
             }));
@@ -169,7 +178,7 @@ function cleanData(data, projection, config, callback) {
         );
     });
     callback(null, cleaned);
-    return cleaned;
+    // return cleaned;
 }
 
 function hexColourScale(min, max) {
@@ -296,19 +305,24 @@ looker.plugins.visualizations.add({
     },
     // Render in response to the data or settings changing
     updateAsync: function (data, element, config, queryResponse, details, done) {
-        this.clearErrors();
+        const visObject = this
+        visObject.clearErrors();
         modifyOptions(this, queryResponse, options);
         if (!validateDataAndConfig(this, queryResponse, config)) {
             return;
         }
+
 
         d3q.queue()
             .defer(readMapJson, config.topoJson)
             .defer(cleanData, data, projection, config)
             // Send the "this" and "element" objects through to the "ready" function
             // So that we have access to the visualisation's stuff
-            .defer((element, that, callback) => callback(null, {"element": element, "visObject": that}), element, this)
-            .await(ready);
+            // .defer((element, that, callback) => callback(null, {"element": element, "visObject": that}), element, this)
+            // .await(ready);
+            .await(function(error, topology, cleanedData) {
+                ready(error, topology, cleanedData, {"element": element, "visObject": visObject})
+            });
 
         done();
     }
