@@ -1,4 +1,4 @@
-import { select, format, nest, map } from "d3";
+import { select, scaleLinear, format, nest, map } from "d3";
 import { geoMercator, geoPath } from "d3-geo";
 import { sliderBottom } from "d3-simple-slider";
 

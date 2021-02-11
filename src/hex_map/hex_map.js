@@ -30,15 +30,15 @@ function ready(error, topology, cleanedData, vis) {
     visObject.sliderSvg.attr("height", sliderHeight)
         .attr("width", sliderWidth)
 
-    let hexGroup = visObject.mapSvg.append("g").attr("id", "hex_group");
-    let sliderGroup = visObject.sliderSvg.append("g").attr("id", "slider_group");
-    let axisGroup = sliderGroup.append('g').attr("id", "axis-group");
-    let brushGroup = sliderGroup.append('g').attr("id", "brush_group").attr("transform", 'translate(0,0)');
+    var hexGroup = visObject.mapSvg.append("g").attr("id", "hex_group");
+    var sliderGroup = visObject.sliderSvg.append("g").attr("id", "slider_group");
+    var axisGroup = sliderGroup.append('g').attr("id", "axis-group");
+    var brushGroup = sliderGroup.append('g').attr("id", "brush_group").attr("transform", 'translate(0,0)');
 
-    let geojson = topojson.feature(topology, topology.objects.chicago);
+    var geojson = topojson.feature(topology, topology.objects.chicago);
     projection.fitExtent([[40, 10], [element.clientWidth, element.clientHeight]], geojson);
 
-    let path = d3.geoPath()
+    var path = d3.geoPath()
         .projection(projection);
 
     // Draw the map
@@ -49,7 +49,7 @@ function ready(error, topology, cleanedData, vis) {
         .attr("d", path);
 
     // Draw Slider
-    let timeScale = d3.scaleTime()
+    var timeScale = d3.scaleTime()
         .domain(d3.extent(cleanedData, d => d.start_timestamp))
         .range([0, sliderWidth - sliderMargin.left - sliderMargin.right])
         .nice()
@@ -58,8 +58,8 @@ function ready(error, topology, cleanedData, vis) {
     visObject.sliderSvg.attr("width", sliderWidth)
         .attr("height", sliderHeight);
 
-    let brushResizePath = function (d) {
-        let e = +(d.type == "e"),
+    var brushResizePath = function (d) {
+        var e = +(d.type == "e"),
             x = e ? 1 : -1,
             y = (sliderHeight - sliderMargin.top - sliderMargin.bottom) / 2;
         return "M" + (.5 * x) + "," + y + "A6,6 0 0 " + e + " " + (6.5 * x) + "," + (y + 6) + "V" + (2 * y - 6) +
@@ -76,8 +76,8 @@ function ready(error, topology, cleanedData, vis) {
     axisGroup.call(d3.axisBottom(timeScale).ticks(sliderWidth / 70));
     // .attr("transform", 'translate('+[0,10]+')')
 
-    let handle = brushGroup.selectAll(".handle--custom")
-        .data([{type: "w"}, {type: "e"}])
+    var handle = brushGroup.selectAll(".handle--custom")
+        .data([{ type: "w" }, { type: "e" }])
         .join("path")
         .attr("class", "handle--custom")
         .attr("stroke", "#000")
@@ -116,8 +116,8 @@ function ready(error, topology, cleanedData, vis) {
 }
 
 function updateHexbin(hexbin, hexGroup, data) {
-    let hexbinData = hexbin(data);
-    let maxMetric = d3.max(hexbinData, function (d) {
+    var hexbinData = hexbin(data);
+    var maxMetric = d3.max(hexbinData, function (d) {
         return d3.sum(d, function (e) {
             return e.metric;
         });
@@ -134,12 +134,8 @@ function updateHexbin(hexbin, hexGroup, data) {
     hexGroup.selectAll("path")
         .data(hexbinData)
         .join("path")
-        .attr("d", function (d) {
-            return hexbin.hexagon();
-        })
-        .attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        })
+        .attr("d", function (d) { return hexbin.hexagon(); })
+        .attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; })
         .attr("stroke", "#FFF")
         .attr("fill", function (d) {
             // Return the sum of the metric value passed through the colour scale function.
@@ -154,9 +150,9 @@ Clean and verify the data from the data table and
 convert lat/long to x/y based on the projection provided 
 */
 function cleanData(data, projection, config, callback) {
-    let cleaned = [];
+    var cleaned = [];
     data.forEach(element => {
-        let p = projection([element[config.longitude].value, element[config.latitude].value]);
+        var p = projection([element[config.longitude].value, element[config.latitude].value]);
         cleaned.push(
             {
                 "pickup_x": p[0],
@@ -216,20 +212,20 @@ var options = {
 };
 
 function modifyOptions(vis, queryResponse, existingOptions) {
-    let latLongFields = [];
-    let timeDimensionFields = [];
-    let measureFields = [];
+    var latLongFields = [];
+    var timeDimensionFields = [];
+    var measureFields = [];
 
     queryResponse.fields.dimension_like.forEach(element => {
         switch (element.type) {
             case 'date_time':
-                timeDimensionFields.push({[element.label]: element.name});
+                timeDimensionFields.push({ [element.label]: element.name });
                 break;
             case 'string':
-                latLongFields.push({[element.label]: element.name});
+                latLongFields.push({ [element.label]: element.name });
                 break;
             case 'number':
-                latLongFields.push({[element.label]: element.name});
+                latLongFields.push({ [element.label]: element.name });
                 break;
             default:
                 break;
@@ -237,9 +233,9 @@ function modifyOptions(vis, queryResponse, existingOptions) {
     });
 
     queryResponse.fields.measure_like.forEach(element => {
-        measureFields.push({[element.label]: element.name});
+        measureFields.push({ [element.label]: element.name });
     });
-    let newOptions = {...existingOptions};
+    var newOptions = { ...existingOptions };
 
     newOptions["timeDimension"].values = timeDimensionFields;
     newOptions["latitude"].values = latLongFields;
@@ -251,11 +247,11 @@ function modifyOptions(vis, queryResponse, existingOptions) {
 
 function validateDataAndConfig(vis, queryResponse, config) {
     if (queryResponse.fields.measure_like.length < 1) {
-        vis.addError({title: "No Measures", message: "This visualisation requires a measure"});
+        vis.addError({ title: "No Measures", message: "This visualisation requires a measure" });
         return false;
     }
     if (queryResponse.fields.dimension_like.length < 3) {
-        vis.addError({title: "No Dimensions", message: "This visualisation requires 3 dimensions"});
+        vis.addError({ title: "No Dimensions", message: "This visualisation requires 3 dimensions" });
         return false;
     }
     return true;
@@ -284,8 +280,8 @@ looker.plugins.visualizations.add({
 
         this.mapSvg = d3.select("#vis")
             .append("svg")
-        // .attr("width", "100%")
-        // .attr("height", "100%")
+            // .attr("width", "100%")
+            // .attr("height", "100%")
 
         this.sliderSvg = d3.select("#vis")
             .append("svg")
@@ -307,7 +303,7 @@ looker.plugins.visualizations.add({
             .defer(cleanData, data, projection, config)
             // Send the "this" and "element" objects through to the "ready" function
             // So that we have access to the visualisation's stuff
-            .defer((element, that, callback) => callback(null, {"element": element, "visObject": that}), element, this)
+            .defer((element, that, callback) => callback(null, { "element": element, "visObject": that }), element, this)
             .await(ready);
 
         done();
