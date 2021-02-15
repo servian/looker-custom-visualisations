@@ -13,7 +13,7 @@ function ready(error, topology, cleanedData, vis) {
     visObject.sliderSvg.html('');
 
     const width = element.clientWidth;
-    const height = element.clientHeight;
+    const height = element.clientHeight - 50;
 
     const sliderWidth = width
     const sliderHeight = 45;
@@ -80,7 +80,7 @@ function ready(error, topology, cleanedData, vis) {
         .on("brush", brushMoved)
         .on("end", brushMoved);
 
-    axisGroup.call(d3.axisBottom(timeScale).ticks(sliderWidth / 70));
+    axisGroup.call(d3.axisBottom(timeScale));
     // .attr("transform", 'translate('+[0,10]+')')
 
     let handle = brushGroup.selectAll(".handle--custom")
@@ -99,12 +99,11 @@ function ready(error, topology, cleanedData, vis) {
         .attr('fill', "#ffb84d");
 
     function brushMoved() {
-        console.log("brushing")
         let selection = d3.event.selection
 
         const hexbin = d3hex.hexbin()
             .extent([[10, 10], [width, height]])
-            .radius(6)
+            .radius(5)
             .x(d => d.pickup_x)
             .y(d => d.pickup_y);
 
@@ -125,37 +124,40 @@ function ready(error, topology, cleanedData, vis) {
 }
 
 function updateHexbin(hexbin, hexGroup, data) {
-    let hexbinData = hexbin(data);
-    let maxMetric = d3.max(hexbinData, function (d) {
-        return d3.sum(d, function (e) {
-            return e.metric;
-        });
-    });
-
-    // The colour scale is relative to the min and max values
-    // of the sliders' current window and not the entire dataset.
-    // That's why the scale is recreated every time the slider is 
-    // udpated.
-    const colour = d3.scaleLinear()
-        .domain([0, maxMetric / 2, maxMetric])
-        .range(['#FDEDEC', '#E74C3C', '#78281F']);
-
-    hexGroup.selectAll("path")
-        .data(hexbinData)
-        .join("path")
-        .attr("d", function (d) {
-            return hexbin.hexagon();
-        })
-        .attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        })
-        .attr("stroke", "#FFF")
-        .attr("fill", function (d) {
-            // Return the sum of the metric value passed through the colour scale function.
-            return colour(d3.sum(d, function (e) {
+    if(data.length > 0){
+        let hexbinData = hexbin(data);
+        let maxMetric = d3.max(hexbinData, function (d) {
+            return d3.sum(d, function (e) {
                 return e.metric;
-            }));
+            });
         });
+
+        // The colour scale is relative to the min and max values
+        // of the sliders' current window and not the entire dataset.
+        // That's why the scale is recreated every time the slider is
+        // udpated.
+        const colour = d3.scaleLinear()
+            .domain([0, maxMetric / 2, maxMetric])
+            // .range(['#FDEDEC', '#E74C3C', '#195d00']);
+            .range(['#2d940f', '#ef982e', '#ea453c',]);
+
+        hexGroup.selectAll("path")
+            .data(hexbinData)
+            .join("path")
+            .attr("d", function (d) {
+                return hexbin.hexagon();
+            })
+            .attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            })
+            .attr("stroke", "#FFF")
+            .attr("fill", function (d) {
+                // Return the sum of the metric value passed through the colour scale function.
+                return colour(d3.sum(d, function (e) {
+                    return e.metric;
+                }));
+            });
+    }
 }
 
 /*
@@ -165,14 +167,14 @@ convert lat/long to x/y based on the projection provided
 function cleanData(data, projection, config, callback) {
     let cleaned = [];
     data.forEach(element => {
-        let p = projection([element[config.longitude].value, element[config.latitude].value]);
+        let p = projection([element[config.location].value[1], element[config.location].value[0]]);
         cleaned.push(
             {
                 "pickup_x": p[0],
                 "pickup_y": p[1],
                 "start_timestamp": d3.isoParse(element[config.timeDimension].value),
-                "pickup_long": element[config.longitude].value,
-                "pickup_lat": element[config.latitude].value,
+                "pickup_long": element[config.location].value[1],
+                "pickup_lat": element[config.location].value[0],
                 "metric": +element[config.measure].value
             }
         );
@@ -198,21 +200,12 @@ var options = {
         type: "string",
         label: "Time column",
         section: "Field Selection"
-        // {"Select fields...": "select_field"}
-        // ]
     },
-    latitude: {
+    location: {
         order: 2,
         display: "select",
         type: "string",
-        label: "Latitude column",
-        section: "Field Selection"
-    },
-    longitude: {
-        order: 3,
-        display: "select",
-        type: "string",
-        label: "Longitude column",
+        label: "Location Column",
         section: "Field Selection"
     },
     measure: {
@@ -225,7 +218,7 @@ var options = {
 };
 
 function modifyOptions(vis, queryResponse, existingOptions) {
-    let latLongFields = [];
+    let locationFields = [];
     let timeDimensionFields = [];
     let measureFields = [];
 
@@ -234,11 +227,8 @@ function modifyOptions(vis, queryResponse, existingOptions) {
             case 'date_time':
                 timeDimensionFields.push({[element.label]: element.name});
                 break;
-            case 'string':
-                latLongFields.push({[element.label]: element.name});
-                break;
-            case 'number':
-                latLongFields.push({[element.label]: element.name});
+            case 'location':
+                locationFields.push({[element.label]: element.name});
                 break;
             default:
                 break;
@@ -251,8 +241,7 @@ function modifyOptions(vis, queryResponse, existingOptions) {
     let newOptions = {...existingOptions};
 
     newOptions["timeDimension"].values = timeDimensionFields;
-    newOptions["latitude"].values = latLongFields;
-    newOptions["longitude"].values = latLongFields;
+    newOptions["location"].values = locationFields;
     newOptions["measure"].values = measureFields;
 
     vis.trigger('registerOptions', newOptions);
@@ -263,8 +252,8 @@ function validateDataAndConfig(vis, queryResponse, config) {
         vis.addError({title: "No Measures", message: "This visualisation requires a measure"});
         return false;
     }
-    if (queryResponse.fields.dimension_like.length < 3) {
-        vis.addError({title: "No Dimensions", message: "This visualisation requires 3 dimensions"});
+    if (queryResponse.fields.dimension_like.length < 2) {
+        vis.addError({title: "No Dimensions", message: "This visualisation requires 2 dimensions"});
         return false;
     }
     return true;
