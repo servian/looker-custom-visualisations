@@ -2,6 +2,8 @@ import * as d3 from "d3";
 import * as topojson from "topojson-client";
 import * as d3q from "d3-queue";
 import * as d3hex from "d3-hexbin";
+import * as utils from "./utils"
+import {validateDataAndConfig} from "./utils";
 
 var projection = d3.geoMercator();
 
@@ -124,7 +126,7 @@ function ready(error, topology, cleanedData, vis) {
 }
 
 function updateHexbin(hexbin, hexGroup, data) {
-    if(data.length > 0){
+    if (data.length > 0) {
         let hexbinData = hexbin(data);
         let maxMetric = d3.max(hexbinData, function (d) {
             return d3.sum(d, function (e) {
@@ -135,7 +137,7 @@ function updateHexbin(hexbin, hexGroup, data) {
         // The colour scale is relative to the min and max values
         // of the sliders' current window and not the entire dataset.
         // That's why the scale is recreated every time the slider is
-        // udpated.
+        // updated.
         const colour = d3.scaleLinear()
             .domain([0, maxMetric / 2, maxMetric])
             // .range(['#FDEDEC', '#E74C3C', '#195d00']);
@@ -158,32 +160,6 @@ function updateHexbin(hexbin, hexGroup, data) {
                 }));
             });
     }
-}
-
-/*
-Clean and verify the data from the data table and 
-convert lat/long to x/y based on the projection provided 
-*/
-function cleanData(data, projection, config, callback) {
-    let cleaned = [];
-    data.forEach(element => {
-        let p = projection([element[config.location].value[1], element[config.location].value[0]]);
-        cleaned.push(
-            {
-                "pickup_x": p[0],
-                "pickup_y": p[1],
-                "start_timestamp": d3.isoParse(element[config.timeDimension].value),
-                "pickup_long": element[config.location].value[1],
-                "pickup_lat": element[config.location].value[0],
-                "metric": +element[config.measure].value
-            }
-        );
-    });
-    callback(null, cleaned);
-    // return cleaned;
-}
-
-function hexColourScale(min, max) {
 }
 
 var options = {
@@ -217,57 +193,6 @@ var options = {
     }
 };
 
-function modifyOptions(vis, queryResponse, existingOptions) {
-    let locationFields = [];
-    let timeDimensionFields = [];
-    let measureFields = [];
-
-    queryResponse.fields.dimension_like.forEach(element => {
-        switch (element.type) {
-            case 'date_time':
-                timeDimensionFields.push({[element.label]: element.name});
-                break;
-            case 'location':
-                locationFields.push({[element.label]: element.name});
-                break;
-            default:
-                break;
-        }
-    });
-
-    queryResponse.fields.measure_like.forEach(element => {
-        measureFields.push({[element.label]: element.name});
-    });
-    let newOptions = {...existingOptions};
-
-    newOptions["timeDimension"].values = timeDimensionFields;
-    newOptions["location"].values = locationFields;
-    newOptions["measure"].values = measureFields;
-
-    vis.trigger('registerOptions', newOptions);
-}
-
-function validateDataAndConfig(vis, queryResponse, config) {
-    if (queryResponse.fields.measure_like.length < 1) {
-        vis.addError({title: "No Measures", message: "This visualisation requires a measure"});
-        return false;
-    }
-    if (queryResponse.fields.dimension_like.length < 2) {
-        vis.addError({title: "No Dimensions", message: "This visualisation requires 2 dimensions"});
-        return false;
-    }
-    return true;
-}
-
-function readMapJson(mapUrl, callback) {
-    d3.json(mapUrl).then(function (topology) {
-        callback(null, topology);
-    })
-        .catch(function (error) {
-            callback(error, null);
-        });
-}
-
 looker.plugins.visualizations.add({
     options: options,
     create: function (element, config) {
@@ -296,20 +221,28 @@ looker.plugins.visualizations.add({
     updateAsync: function (data, element, config, queryResponse, details, done) {
         const visObject = this
         visObject.clearErrors();
-        modifyOptions(this, queryResponse, options);
-        if (!validateDataAndConfig(this, queryResponse, config)) {
+
+        let errors = validateDataAndConfig(queryResponse, config)
+        if (errors.length > 0) {
+            errors.forEach(err => {
+                    visObject.addError({title: err.title, message: err.message});
+                }
+            )
             return;
         }
 
+        // Update options now that fields are in the Look
+        let newOptions = utils.updateOptions(queryResponse, options);
+        this.trigger('registerOptions', newOptions);
 
         d3q.queue()
-            .defer(readMapJson, config.topoJson)
-            .defer(cleanData, data, projection, config)
+            .defer(utils.readUrlData, config.topoJson)
+            .defer(utils.cleanData, data, projection, config)
             // Send the "this" and "element" objects through to the "ready" function
             // So that we have access to the visualisation's stuff
             // .defer((element, that, callback) => callback(null, {"element": element, "visObject": that}), element, this)
             // .await(ready);
-            .await(function(error, topology, cleanedData) {
+            .await(function (error, topology, cleanedData) {
                 ready(error, topology, cleanedData, {"element": element, "visObject": visObject})
             });
 
