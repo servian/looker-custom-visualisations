@@ -4,17 +4,14 @@ import * as d3 from "d3";
 Clean and verify the data from the data table and
 convert lat/long to x/y based on the projection provided
 */
-export function cleanData(data, projection, config, callback) {
+export function cleanData(data, config, callback) {
     let cleaned = [];
     data.forEach(element => {
-        let p = projection([element[config.location].value[1], element[config.location].value[0]]);
         cleaned.push(
             {
-                "pickup_x": p[0],
-                "pickup_y": p[1],
-                "start_timestamp": d3.isoParse(element[config.timeDimension].value),
-                "pickup_long": element[config.location].value[1],
-                "pickup_lat": element[config.location].value[0],
+                "timestamp": d3.isoParse(element[config.timeDimension].value),
+                "longitude": element[config.location].value[1],
+                "latitude": element[config.location].value[0],
                 "metric": +element[config.measure].value
             }
         );
