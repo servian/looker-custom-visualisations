@@ -23,10 +23,9 @@ export function cleanData(data, config, callback) {
 export function readUrlData(mapUrl, callback) {
     d3.json(mapUrl).then(function (topology) {
         callback(null, topology);
-    })
-        .catch(function (error) {
-            callback(error, null);
-        });
+    }).catch(function (error) {
+        callback(error, null);
+    });
 }
 
 export function validateDataAndConfig(queryResponse, config) {

@@ -23,9 +23,7 @@ function ready(error, topologyData, cleanedData, vis) {
     hexMap.clear()
     hexMap.renderMap("football_field")
     hexMap.renderSlider()
-
 }
-
 
 var options = {
     topoJson: {
@@ -64,9 +62,9 @@ looker.plugins.visualizations.add({
         element.innerHTML = `
         <style>
             path.topology {
-            fill: transparent;
-            stroke: #000;
-            stroke-width: .5px;
+                fill: transparent;
+                stroke: #000;
+                stroke-width: .5px;
             }
         </style>`;
     },
