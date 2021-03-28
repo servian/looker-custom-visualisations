@@ -6,6 +6,7 @@ export class HexMap {
     constructor(mapProps, sliderProps, topojsonData, data, containerElement) {
         this.mapWidth = mapProps.width
         this.mapHeight = mapProps.height
+        this.hexSize = +mapProps.hexSize
         this.sliderWidth = sliderProps.width
         this.sliderHeight = sliderProps.height
         this.sliderTop = sliderProps.top
@@ -102,7 +103,7 @@ export class HexMap {
             const hexbin = d3hex.hexbin()
                 .extent([[10, 10], [mapWidth, mapHeight]])
                 // TODO: Allow user to select radius of hexagons
-                .radius(8)
+                .radius(this.hexSize)
                 .x(d => this.projection([d.longitude, d.latitude])[0])
                 .y(d => this.projection([d.longitude, d.latitude])[1])
 

@@ -1,11 +1,8 @@
 import * as d3 from "d3";
 
 /*
-Clean and verify the data from the data table and
-convert lat/long to x/y based on the projection provided
+Clean and verify the data from the data table
 */
-
-// TODO: Filter out records where lat or long is null
 export function cleanData(data, config, callback) {
     let getOrNull = (val) => (typeof val === 'undefined') ? null : val.value;
     let cleaned = [];
@@ -36,6 +33,8 @@ export function readUrlData(mapUrl, callback) {
     });
 }
 
+// TODO: Do a better job of validating data
+// TODO: Validate configuration
 export function validateDataAndConfig(queryResponse, config) {
     let errors = []
 

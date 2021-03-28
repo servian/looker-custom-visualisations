@@ -2,13 +2,14 @@ import * as d3q from "d3-queue";
 import * as utils from "./utils"
 import {HexMap} from "./hexmap";
 
-function ready(error, topologyData, cleanedData, vis) {
+function ready(error, topologyData, cleanedData, config, containerElement) {
     if (error) throw error;
-    const element = vis.element
+    const element = containerElement
 
     const mapProps = {
         width: element.clientWidth,
-        height: element.clientHeight - 50
+        height: element.clientHeight - 50,
+        hexSize: config.hex_size
     }
     const sliderProps = {
         width: element.clientWidth,
@@ -21,7 +22,7 @@ function ready(error, topologyData, cleanedData, vis) {
 
     const hexMap = new HexMap(mapProps, sliderProps, topologyData, cleanedData, element)
     hexMap.clear()
-    hexMap.renderMap("london_geo")
+    hexMap.renderMap("football_field")
     hexMap.renderSlider()
 }
 
@@ -59,7 +60,8 @@ var options = {
         type: "number",
         label: "Hexagon Size",
         section: "Map Config",
-        display_size: "half"
+        display_size: "half",
+        default: 8
     }
 };
 
@@ -97,10 +99,8 @@ looker.plugins.visualizations.add({
         d3q.queue()
             .defer(utils.readUrlData, config.topoJson)
             .defer(utils.cleanData, data, config)
-            // Send the "this" and "element" objects through to the "ready" function
-            // So that we have access to the visualisation's stuff
             .await(function (error, topology, cleanedData) {
-                ready(error, topology, cleanedData, {"element": element, "visObject": visObject})
+                ready(error, topology, cleanedData, config, element)
             });
 
         done();
