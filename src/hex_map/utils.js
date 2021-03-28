@@ -4,20 +4,28 @@ import * as d3 from "d3";
 Clean and verify the data from the data table and
 convert lat/long to x/y based on the projection provided
 */
+
+// TODO: Filter out records where lat or long is null
 export function cleanData(data, config, callback) {
+    let getOrNull = (val) => (typeof val === 'undefined') ? null : val.value;
     let cleaned = [];
     data.forEach(element => {
-        cleaned.push(
-            {
-                "timestamp": d3.isoParse(element[config.timeDimension].value),
-                "longitude": element[config.location].value[1],
-                "latitude": element[config.location].value[0],
-                "metric": +element[config.measure].value
-            }
-        );
+        let timestamp = getOrNull(element[config.timeDimension])
+        let location = getOrNull(element[config.location])
+        let metric = getOrNull(element[config.measure])
+
+        if (timestamp != null && location != null && metric != null) {
+            cleaned.push(
+                {
+                    "timestamp": d3.isoParse(timestamp),
+                    "longitude": location[1],
+                    "latitude": location[0],
+                    "metric": +metric
+                }
+            );
+        }
     });
     callback(null, cleaned);
-    // return cleaned;
 }
 
 export function readUrlData(mapUrl, callback) {

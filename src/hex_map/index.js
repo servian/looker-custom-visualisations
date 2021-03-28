@@ -21,7 +21,7 @@ function ready(error, topologyData, cleanedData, vis) {
 
     const hexMap = new HexMap(mapProps, sliderProps, topologyData, cleanedData, element)
     hexMap.clear()
-    hexMap.renderMap("football_field")
+    hexMap.renderMap("london_geo")
     hexMap.renderSlider()
 }
 
@@ -31,7 +31,7 @@ var options = {
         display: "text",
         type: "string",
         label: "Topojson URL",
-        section: "Map"
+        section: "Map Config"
     },
     timeDimension: {
         order: 1,
@@ -53,6 +53,13 @@ var options = {
         type: "string",
         label: "Measure column",
         section: "Field Selection"
+    },
+    hex_size: {
+        order: 4,
+        type: "number",
+        label: "Hexagon Size",
+        section: "Map Config",
+        display_size: "half"
     }
 };
 
