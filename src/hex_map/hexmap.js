@@ -30,16 +30,18 @@ export class HexMap {
         this.projection.fitExtent([[40, 10], [width, height]], geojson);
     }
 
-    renderMap(featureToRender) {
+    renderMap(objectToRender) {
         const topojsonData = this.topojsonData
         const width = this.mapWidth
         const height = this.mapHeight
+
+        let obj = objectToRender ? objectToRender : Object.keys(topojsonData.objects)[0]
 
         this.mapSvg
             .attr("width", width)
             .attr("height", height)
 
-        let geojson = topojson.feature(topojsonData, topojsonData.objects[featureToRender]);
+        let geojson = topojson.feature(topojsonData, obj);
         this.updateProjection(width, height, geojson);
 
         let path = d3.geoPath().projection(this.projection);

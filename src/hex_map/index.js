@@ -22,7 +22,7 @@ function ready(error, topologyData, cleanedData, config, containerElement) {
 
     const hexMap = new HexMap(mapProps, sliderProps, topologyData, cleanedData, element)
     hexMap.clear()
-    hexMap.renderMap("football_field")
+    hexMap.renderMap()
     hexMap.renderSlider()
 }
 
