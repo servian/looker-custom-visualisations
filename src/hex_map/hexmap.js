@@ -7,6 +7,7 @@ export class HexMap {
         this.mapWidth = mapProps.width
         this.mapHeight = mapProps.height
         this.hexSize = +mapProps.hexSize
+        this.hexColours = mapProps.hexColours
         this.sliderWidth = sliderProps.width
         this.sliderHeight = sliderProps.height
         this.sliderTop = sliderProps.top
@@ -26,7 +27,7 @@ export class HexMap {
         this.sliderSvg.html('')
     }
 
-    updateProjection(width, height, geojson){
+    updateProjection(width, height, geojson) {
         this.projection.fitExtent([[40, 10], [width, height]], geojson);
     }
 
@@ -159,6 +160,8 @@ export class HexMap {
     }
 
     updateHexbin(hexbin, hexGroup, data) {
+        const hexColours = (this.hexColours.length > 0) ? this.hexColours : ['#2d940f', '#ef982e', '#ea453c',]
+
         if (data.length > 0) {
             let hexbinData = hexbin(data);
             let maxMetric = d3.max(hexbinData, function (d) {
@@ -171,10 +174,18 @@ export class HexMap {
             // of the sliders' current window and not the entire dataset.
             // That's why the scale is recreated every time the slider is
             // updated.
-            const colour = d3.scaleLinear()
-                .domain([0, maxMetric / 2, maxMetric])
-                // .range(['#FDEDEC', '#E74C3C', '#195d00']);
-                .range(['#2d940f', '#ef982e', '#ea453c',]);
+            const colour = (x) => {
+                const scale = d3.scaleLinear()
+                    .domain([0, maxMetric / 2, maxMetric])
+                    .range(hexColours);
+
+                if (hexColours.length > 1) {
+                    return scale(x)
+                } else {
+                    // If the user has only entered one colour then just use that
+                    return hexColours[0]
+                }
+            }
 
             hexGroup.selectAll("path")
                 .data(hexbinData)

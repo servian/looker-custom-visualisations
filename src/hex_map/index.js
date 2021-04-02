@@ -9,7 +9,8 @@ function ready(error, topologyData, cleanedData, config, containerElement) {
     const mapProps = {
         width: element.clientWidth,
         height: element.clientHeight - 50,
-        hexSize: config.hex_size
+        hexSize: config.hex_size,
+        hexColours: config.hex_colours
     }
     const sliderProps = {
         width: element.clientWidth,
@@ -26,7 +27,8 @@ function ready(error, topologyData, cleanedData, config, containerElement) {
     hexMap.renderSlider()
 }
 
-var options = {
+// TODO: Organise options better with headings etc
+let options = {
     topoJson: {
         order: 1,
         display: "text",
@@ -56,12 +58,20 @@ var options = {
         section: "Field Selection"
     },
     hex_size: {
-        order: 4,
+        order: 3,
         type: "number",
         label: "Hexagon Size",
         section: "Map Config",
         display_size: "half",
         default: 8
+    },
+    hex_colours: {
+        order: 2,
+        type: "array",
+        label: "Hexagon Colour",
+        section: "Map Config",
+        display: "string",
+        placeholder: "#2d940f, #ef982e, #ea453c, blue, etc."
     }
 };
 
