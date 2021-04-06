@@ -105,7 +105,6 @@ export class HexMap {
 
             const hexbin = d3hex.hexbin()
                 .extent([[10, 10], [mapWidth, mapHeight]])
-                // TODO: Allow user to select radius of hexagons
                 .radius(this.hexSize)
                 .x(d => this.projection([d.longitude, d.latitude])[0])
                 .y(d => this.projection([d.longitude, d.latitude])[1])
@@ -164,7 +163,7 @@ export class HexMap {
 
         if (data.length > 0) {
             let hexbinData = hexbin(data);
-            let maxMetric = d3.max(hexbinData, function (d) {
+            let extent = d3.extent(hexbinData, function (d) {
                 return d3.sum(d, function (e) {
                     return e.metric;
                 });
@@ -176,9 +175,8 @@ export class HexMap {
             // updated.
             const colour = (x) => {
                 const scale = d3.scaleLinear()
-                    .domain([0, maxMetric / 2, maxMetric])
+                    .domain(d3.quantize(d3.interpolate(extent[0], extent[1]), hexColours.length))
                     .range(hexColours);
-
                 if (hexColours.length > 1) {
                     return scale(x)
                 } else {

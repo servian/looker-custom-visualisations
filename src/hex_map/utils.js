@@ -58,6 +58,9 @@ export function updateOptions(queryResponse, existingOptions) {
             case 'date_time':
                 timeDimensionFields.push({[element.label]: element.name});
                 break;
+            case 'date_date':
+                timeDimensionFields.push({[element.label]: element.name});
+                break;
             case 'location':
                 locationFields.push({[element.label]: element.name});
                 break;
